@@ -31,7 +31,9 @@ class File extends SplFileInfo implements ResourceInterface
     protected Content $content;
 
     /**
-     * @param Content|string $entity File path or content instance.
+     * Resolve the file with path or content instance.
+     *
+     * @param Content|string $entity
      * @param bool $exists
      *
      * @throws Exception
