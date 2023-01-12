@@ -5,6 +5,8 @@ namespace Filaio;
 use Exception;
 use Filaio\Content\Content;
 use Filaio\Contracts\ResourceInterface;
+use Filaio\Contracts\StreamInterface;
+use Filaio\Stream\FileStream;
 use SplFileInfo;
 
 class File extends SplFileInfo implements ResourceInterface
@@ -14,7 +16,14 @@ class File extends SplFileInfo implements ResourceInterface
      *
      * @var bool
      */
-    public bool $exists = false;
+    protected bool $exists = false;
+
+    /**
+     * Indicates stream wrapper which is bound to stream factory.
+     *
+     * @var string
+     */
+    protected string $streamWrapper;
 
     /**
      * Indicates file path.
@@ -35,12 +44,14 @@ class File extends SplFileInfo implements ResourceInterface
      *
      * @param Content|string $entity
      * @param bool $exists
-     *
+     * @param string $streamWrapper
      * @throws Exception
      */
-    public function __construct(Content|string $entity, bool $exists = true)
+    public function __construct(Content|string $entity, bool $exists = true, string $streamWrapper = 'file')
     {
+        // TODO Reconsider logic for temporary (in-memory) files
         $this->exists = $exists;
+        $this->streamWrapper = $streamWrapper;
 
         if ($entity instanceof Content) {
             $this->content = $entity;
@@ -60,7 +71,7 @@ class File extends SplFileInfo implements ResourceInterface
      *
      * @throws Exception
      */
-    public function resolve(string $path): bool
+    protected function resolve(string $path): bool
     {
         if (!is_file($path))
             throw new Exception("$path is not recognized as a file.");
@@ -72,6 +83,18 @@ class File extends SplFileInfo implements ResourceInterface
     }
 
     /**
+     * Determine if the file exists.
+     *
+     * @return bool
+     */
+    public function exists(): bool
+    {
+        return $this->exists;
+    }
+
+    /**
+     * Get content instance.
+     *
      * @return Content
      */
     public function getContent(): Content
@@ -80,11 +103,23 @@ class File extends SplFileInfo implements ResourceInterface
     }
 
     /**
+     * Set content value.
+     *
      * @param $value
      * @return Content
      */
     public function setContent($value): Content
     {
         return $this->content->set($value);
+    }
+
+    /**
+     * Create a new factory instance for stream.
+     *
+     * @return StreamInterface
+     */
+    public function streamFactory(): StreamInterface
+    {
+        return new FileStream();
     }
 }

@@ -5,6 +5,7 @@ namespace Filaio;
 use Exception;
 use Filaio\Content\Content;
 use Filaio\Contracts\ResourceInterface;
+use Filaio\Stream\Factory;
 
 class Filaio
 {
@@ -14,6 +15,13 @@ class Filaio
      * @var ResourceInterface
      */
     protected ResourceInterface $resource;
+
+    /**
+     * The stream factory instance.
+     *
+     * @var Factory
+     */
+    protected Factory $streamFactory;
 
     /**
      * Create an instance with file resource.
@@ -37,9 +45,13 @@ class Filaio
     {
         $this->resource = $resource;
 
+        // We need to instantiate steam factory here to manage hierarchical.
+        $this->streamFactory = new Factory($this->resource->streamFactory());
     }
 
     /**
+     * Get / set the resource content.
+     *
      * @param null $value
      * @return Content
      */
@@ -49,5 +61,15 @@ class Filaio
             return $this->resource->setContent($value);
 
         return $this->resource->getContent();
+    }
+
+    /**
+     * Get stream factory instance.
+     *
+     * @return Factory
+     */
+    public function stream(): Factory
+    {
+        return $this->streamFactory;
     }
 }
