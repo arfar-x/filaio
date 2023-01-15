@@ -5,8 +5,9 @@ namespace Filaio;
 use Exception;
 use Filaio\Content\Content;
 use Filaio\Contracts\ResourceInterface;
-use Filaio\Contracts\StreamInterface;
 use Filaio\Stream\FileStream;
+use Filaio\Stream\MemoryStream;
+use Filaio\Stream\Stream;
 use SplFileInfo;
 
 class File extends SplFileInfo implements ResourceInterface
@@ -116,10 +117,12 @@ class File extends SplFileInfo implements ResourceInterface
     /**
      * Create a new factory instance for stream.
      *
-     * @return StreamInterface
+     * @return Stream
      */
-    public function streamFactory(): StreamInterface
+    public function streamFactory(): Stream
     {
-        return new FileStream();
+        return $this->exists()
+            ? new FileStream($this->path)
+            : new MemoryStream($this->path);
     }
 }

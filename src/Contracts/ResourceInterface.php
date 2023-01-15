@@ -3,6 +3,7 @@
 namespace Filaio\Contracts;
 
 use Filaio\Content\Content;
+use Filaio\Stream\Stream;
 
 interface ResourceInterface
 {
@@ -31,7 +32,7 @@ interface ResourceInterface
     /**
      * Create a new factory instance for stream.
      *
-     * @return StreamInterface
+     * @return Stream
      */
-    public function streamFactory(): StreamInterface;
+    public function streamFactory(): Stream;
 }

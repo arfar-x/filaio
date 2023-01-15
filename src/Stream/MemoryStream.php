@@ -2,7 +2,7 @@
 
 namespace Filaio\Stream;
 
-class FileStream extends Stream
+class MemoryStream extends Stream
 {
     /**
      * Set stream wrapper type.
@@ -11,6 +11,6 @@ class FileStream extends Stream
      */
     public function setWrapper(): void
     {
-        $this->wrapper = 'file://';
+        $this->wrapper = 'php://temp';
     }
 }

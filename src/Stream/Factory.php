@@ -2,48 +2,47 @@
 
 namespace Filaio\Stream;
 
-use Filaio\Contracts\StreamInterface;
-
+/**
+ * Is there any way to access stream objects (FileStream or MemoryStream) through Factory object
+ * from Builder (high-level string layer) ?
+ *
+ * In Builder.php:
+ *
+ * $this->factory->read(onlyLine: true)
+ * instead of factory calling read from stream instance afterwards.
+ */
 class Factory
 {
     /**
      * The stream instance.
      *
-     * @var StreamInterface
+     * @var Stream
      */
-    protected StreamInterface $stream;
+    protected Stream $stream;
 
     /**
-     * @param StreamInterface $stream
+     * @param Stream $stream
      */
-    public function __construct(StreamInterface $stream)
+    public function __construct(Stream $stream)
     {
         $this->stream = $stream;
     }
 
     /**
-     * Get customized stream wrapper for the stream class.
-     *
      * @return string
      */
-    public function getStreamWrapper(): string
+    public function read(): string
     {
-        return $this->stream->getStreamWrapper();
+//        return $this->stream->read();
+        return 'none';
     }
 
     /**
-     * @return void
+     * @return string
      */
-    public function read(): void
+    public function write(): string
     {
-        // TODO: Implement read() method.
-    }
-
-    /**
-     * @return void
-     */
-    public function write(): void
-    {
-        // TODO: Implement write() method.
+//        return $this->stream->write();
+        return 'none';
     }
 }
