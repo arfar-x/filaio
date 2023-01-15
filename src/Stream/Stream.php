@@ -224,4 +224,21 @@ abstract class Stream
     {
         return ftell($this->stream);
     }
+
+    /**
+     * Set cursor to absolute position.
+     * Get cursor position.
+     *
+     * @param int|null $position
+     * @return bool|int
+     */
+    public function cursor(int $position = null): bool|int
+    {
+        if ($position)
+            return (bool)$this->moveCursor($position, 'set');
+        elseif ($position == 0)
+            return $this->setToBeginning();
+        else
+            return $this->getPosition();
+    }
 }
