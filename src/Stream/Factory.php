@@ -29,12 +29,13 @@ class Factory
     }
 
     /**
+     * @param bool $onlyLine
      * @return string
      */
-    public function read(): string
+    public function read(bool $onlyLine = false): string
     {
-//        return $this->stream->read();
-        return 'none';
+        return $this->stream->read($onlyLine);
+//        return 'none';
     }
 
     /**

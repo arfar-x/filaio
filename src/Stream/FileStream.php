@@ -7,10 +7,12 @@ class FileStream extends Stream
     /**
      * Set stream wrapper type.
      *
-     * @return void
+     * @return FileStream
      */
-    public function setWrapper(): void
+    public function setWrapper(): static
     {
         $this->wrapper = 'file://';
+
+        return $this;
     }
 }

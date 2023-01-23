@@ -7,10 +7,12 @@ class MemoryStream extends Stream
     /**
      * Set stream wrapper type.
      *
-     * @return void
+     * @return MemoryStream
      */
-    public function setWrapper(): void
+    public function setWrapper(): static
     {
         $this->wrapper = 'php://temp';
+
+        return $this;
     }
 }

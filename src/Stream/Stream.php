@@ -2,6 +2,8 @@
 
 namespace Filaio\Stream;
 
+use Exception;
+
 abstract class Stream
 {
     /**
@@ -46,9 +48,21 @@ abstract class Stream
      */
     public function __construct(string $path)
     {
-        $this->setWrapper();
+        $this->setWrapper()
+            ->openStream($path);
+    }
 
-        $this->stream = fopen($this->getWrapperFullForm() . '/' . $path, $this->getMode('read_write_create'));
+    /**
+     * Open and set stream resource.
+     *
+     * @param string $path
+     * @return $this
+     */
+    public function openStream(string $path): static
+    {
+        $this->stream = fopen($this->getWrapperFullForm() . '/' . $path, $this->getMode('read_beginning'));
+
+        return $this;
     }
 
     /**
@@ -85,22 +99,30 @@ abstract class Stream
     /**
      * Set stream wrapper type.
      *
-     * @return void
+     * @return Stream
      */
-    abstract public function setWrapper(): void;
+    abstract public function setWrapper(): static;
 
     /**
-     * Read the content from stream.
+     * Read the content with specified length from stream.
      *
-     * @param bool $onlyLine
+     * @param int $length
      * @return bool|string
      */
-    public function read(bool $onlyLine = false): bool|string
+    public function read(int $length): bool|string
     {
-        // TODO Does not work as expected, reconsider it
-        return $onlyLine
-            ? fgets($this->stream)
-            : file($this->stream);
+        return fread($this->stream, $length);
+    }
+
+    /**
+     * Read only one line from stream.
+     *
+     * @return bool|string
+     */
+    public function readLine(): bool|string
+    {
+        $this->moveCursor(1, 'current');
+        return fgets($this->stream);
     }
 
     /**
@@ -110,6 +132,7 @@ abstract class Stream
      * @param int $position
      * @param string $mode
      * @return string|int
+     * @throws Exception
      */
     public function write(mixed $data, int $position = 0, string $mode = 'override'): string|int
     {
@@ -120,7 +143,21 @@ abstract class Stream
          *  override: override the content of given position until given data ends (like INSERT key mode)
          *  before : opposite of plus
          */
-        return file_put_contents($this->stream, $data);
+
+        switch ($mode) {
+            case 'plus':
+                $this->moveCursor($position, 'set');
+                // TODO Add padding with the size of $data to next byte/character
+                return fwrite($this->stream, $data);
+            case 'override':
+                $this->setEmpty();
+                return fwrite($this->stream, $data);
+            case 'before':
+                // TODO We can use reverse of $data size (negative $data size)
+                return fwrite($this->stream, $data);
+            default:
+                throw new Exception("Unknown write mode {$mode}.");
+        }
     }
 
     /**

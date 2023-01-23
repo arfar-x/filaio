@@ -78,7 +78,7 @@ class File extends SplFileInfo implements ResourceInterface
             throw new Exception("$path is not recognized as a file.");
 
         if ($this->exists = file_exists($path))
-            $this->content = new Content(file_get_contents($this->path));
+            $this->content = new Content('file_get_contents($this->path)');
 
         return $this->exists;
     }
