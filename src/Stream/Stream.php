@@ -29,7 +29,7 @@ abstract class Stream
         'write_create' => 'w',
         'read_write_create' => 'w+',
         'write_end_create' => 'a',
-        'read_write_end_create' => 'a',
+        'read_write_end_create' => 'a+',
         'write_beginning_create_error_on_exist' => 'x',
         'read_write_beginning_create_error_on_exist' => 'x+',
     ];
@@ -209,7 +209,7 @@ abstract class Stream
             };
 
         if (fseek($this->stream, $offset, $mode)) {
-            return $this->cursor = $this->getRealPosition();
+            return $this->cursor = $this->getRawPosition();
         }
 
         return false;
@@ -220,7 +220,7 @@ abstract class Stream
      *
      * @return bool|int
      */
-    public function getRealPosition(): bool|int
+    public function getRawPosition(): bool|int
     {
         return ftell($this->stream);
     }
