@@ -24,6 +24,13 @@ class Filaio
     protected Factory $streamFactory;
 
     /**
+     * The builder instance.
+     *
+     * @var Builder
+     */
+    protected Builder $builder;
+
+    /**
      * Create an instance with file resource.
      *
      * @param Content|string $path
@@ -47,6 +54,7 @@ class Filaio
 
         // We need to instantiate steam factory here to manage hierarchical.
         $this->streamFactory = new Factory($this->resource->streamFactory());
+        $this->builder = new Builder($this->streamFactory);
     }
 
     /**
@@ -71,5 +79,15 @@ class Filaio
     public function stream(): Factory
     {
         return $this->streamFactory;
+    }
+
+    /**
+     * Get builder instance.
+     *
+     * @return Builder
+     */
+    public function builder(): Builder
+    {
+        return $this->builder;
     }
 }
