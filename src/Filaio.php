@@ -90,4 +90,18 @@ class Filaio
     {
         return $this->builder;
     }
+
+    /**
+     * Handle not existed methods.
+     * This way we can call builder methods without accessing 'builder' instance.
+     * So we can call builder's methods via current facade instance.
+     *
+     * @param string $name
+     * @param array $arguments
+     * @return mixed
+     */
+    public function __call(string $name, array $arguments): mixed
+    {
+        return $this->builder->{$name}($arguments);
+    }
 }
