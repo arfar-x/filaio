@@ -2,6 +2,7 @@
 
 namespace Filaio;
 
+use Exception;
 use Filaio\Content\Chunk;
 use Filaio\Content\Content;
 use Filaio\Stream\Factory;
@@ -74,6 +75,7 @@ class Builder
      * @param $chunkSize
      * @param callable $callable
      * @return Content|bool
+     * @throws Exception
      */
     public function map($chunkSize, callable $callable): Content|bool
     {
@@ -100,5 +102,56 @@ class Builder
     public function divideTo(int $number): int
     {
         return $this->chunk->divideTo($this->content, $number);
+    }
+
+    /**
+     * Read stream content within given range.
+     *
+     * @param int $from
+     * @param int $to
+     * @return string
+     */
+    public function readBytes(int $from, int $to): string
+    {
+        // We calculate the difference between $from and $to to get the content length
+        // that we want to read.
+        $difference = $to - $from;
+
+        // Then we set the cursor to $from position as start point, and read the length
+        // we calculated.
+        $this->stream->cursor($from);
+
+        return $this->stream->read($difference);
+    }
+
+    /**
+     * Read the content by given length.
+     *
+     * @param int $length
+     * @return bool|string
+     */
+    public function read(int $length): bool|string
+    {
+        return $this->stream->read($length);
+    }
+
+    /**
+     * Run callback on a specific content despite default content without touching it.
+     *
+     * @param string|Content $content
+     * @param callable $callable
+     * @return mixed
+     */
+    public function onContent(string|Content $content, callable $callable): mixed
+    {
+        $tempContent = $this->content;
+
+        $this->content = $content;
+
+        $result = $callable($this, $content);
+
+        $this->content = $tempContent;
+
+        return $result;
     }
 }

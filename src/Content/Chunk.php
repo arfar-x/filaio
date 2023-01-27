@@ -2,6 +2,7 @@
 
 namespace Filaio\Content;
 
+use Exception;
 use Filaio\Builder;
 
 class Chunk
@@ -37,14 +38,118 @@ class Chunk
      * @param $chunkSize
      * @param callable $callable
      * @return false|Content
+     * @throws Exception
      */
     public function map(string|Content $content, $chunkSize, callable $callable): false|Content
     {
-        for ($part = 0 ; $part < $this->divide($content, $chunkSize) ; ++$part) {
-            $content = $callable($this->builder, (string)$content);
-        }
+        $this->loop($content, $chunkSize, $callable($this->builder, (string)$content));
 
         return $content;
+    }
+
+    /**
+     * Run lazy loop and do operation on it.
+     *
+     * @param string|Content $content
+     * @param int $chunkSize
+     * @param callable|null $callable
+     * @param int|null $untilPartNumber
+     * @return $this
+     * @throws Exception
+     */
+    public function loop(string|Content &$content, int $chunkSize, ?callable $callable, ?int $untilPartNumber): static
+    {
+        if ($untilPartNumber >= 0)
+            return $this->lazyLoop($content, $chunkSize, $callable, $untilPartNumber);
+        else
+            return $this->reverseLazyLoop($content, $chunkSize, $callable, $untilPartNumber);
+    }
+
+    /**
+     * Run lazy loop from the first part to $untilPartNumber.
+     *
+     * @param string|Content $content
+     * @param int $chunkSize
+     * @param callable|null $callable
+     * @param int|null $untilPartNumber
+     * @return Chunk
+     * @throws Exception
+     */
+    protected function lazyLoop(string|Content &$content, int $chunkSize, ?callable $callable, ?int $untilPartNumber): static
+    {
+        if ($untilPartNumber > 0)
+            throw new Exception(sprintf('"untilPartNumber" should not be a negative number, %d given.', $untilPartNumber));
+
+        $condition = $untilPartNumber ?? $this->divide($content, $chunkSize);
+        $from = 0;
+        $to = $chunkSize;
+
+        for ($part = 0 ; $part < $condition ; ++$part) {
+            $from += $chunkSize;
+            $to += $chunkSize;
+            $partContent = $this->builder->readBytes($from, $to);
+            $callable($this->builder, $partContent);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Run lazy loop from the last part to given $untilPartNumber in reverse.
+     *
+     * @param string|Content $content
+     * @param int $chunkSize
+     * @param callable|null $callable
+     * @param int|null $untilPartNumber
+     * @return $this
+     * @throws Exception
+     */
+    protected function reverseLazyLoop(string|Content &$content, int $chunkSize, ?callable $callable, ?int $untilPartNumber): static
+    {
+        if ($untilPartNumber >= 0)
+            throw new Exception(sprintf('"untilPartNumber" should not be a positive number, %d given.', $untilPartNumber));
+
+        $condition = abs($untilPartNumber ?? $this->divide($content, $chunkSize));
+        $to = $this->builder->size();
+        $from = $to - $chunkSize;
+
+        for ($part = $condition ; $part >= 0 ; --$part) {
+            $from -= $chunkSize;
+            $to -= $chunkSize;
+            $partContent = $this->builder->readBytes($from, $to);
+            $callable($this->builder, $partContent);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Do operation on a specific part.
+     *
+     * @param string|Content $content
+     * @param int $partNumber
+     * @param callable $callable
+     * @return Content|string
+     * @throws Exception
+     */
+    public function onPart(string|Content $content, int $partNumber, callable $callable): Content|string
+    {
+        $this->loop($content, $this->chunkSize, $callable($this->builder, (string)$content), $partNumber);
+
+        return $content;
+    }
+
+    /**
+     * Set default chunk size.
+     *
+     * @param int $size
+     * @return $this
+     */
+    public function setChunkSize(int $size): static
+    {
+        $this->chunkSize = $size;
+
+        return $this;
     }
 
     /**
@@ -56,8 +161,7 @@ class Chunk
      */
     public function divide(string|Content $content, int $chunkSize): int
     {
-        // TODO Reconsider the necessity of $content.
-        return ceil($this->builder->size() / $chunkSize);
+        return ceil($this->builder->onContent($content, fn($builder) => $builder->size() / $chunkSize));
     }
 
     /**
@@ -69,10 +173,6 @@ class Chunk
      */
     public function divideTo(string|Content $content, int $number): int
     {
-        $content = (string)$content;
-
-        $chunkSize = strlen($content) / $number;
-
-        return $this->divide($content, $chunkSize);
+        return ceil($this->builder->onContent($content, fn($builder) => $builder->size() / $number));
     }
 }
