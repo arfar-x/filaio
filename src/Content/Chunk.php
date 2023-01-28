@@ -57,7 +57,7 @@ class Chunk
      * @return $this
      * @throws Exception
      */
-    public function loop(string|Content &$content, int $chunkSize, ?callable $callable, ?int $untilPartNumber): static
+    public function loop(string|Content &$content, int $chunkSize, callable $callable = null, int $untilPartNumber = null): static
     {
         if ($untilPartNumber >= 0)
             return $this->lazyLoop($content, $chunkSize, $callable, $untilPartNumber);
@@ -75,9 +75,9 @@ class Chunk
      * @return Chunk
      * @throws Exception
      */
-    protected function lazyLoop(string|Content &$content, int $chunkSize, ?callable $callable, ?int $untilPartNumber): static
+    protected function lazyLoop(string|Content &$content, int $chunkSize, callable $callable = null, int $untilPartNumber = null): static
     {
-        if ($untilPartNumber > 0)
+        if (!is_null($untilPartNumber) && $untilPartNumber > 0)
             throw new Exception(sprintf('"untilPartNumber" should not be a negative number, %d given.', $untilPartNumber));
 
         $condition = $untilPartNumber ?? $this->divide($content, $chunkSize);
@@ -104,9 +104,9 @@ class Chunk
      * @return $this
      * @throws Exception
      */
-    protected function reverseLazyLoop(string|Content &$content, int $chunkSize, ?callable $callable, ?int $untilPartNumber): static
+    protected function reverseLazyLoop(string|Content &$content, int $chunkSize, callable $callable = null, int $untilPartNumber = null): static
     {
-        if ($untilPartNumber >= 0)
+        if (!is_null($untilPartNumber) && $untilPartNumber >= 0)
             throw new Exception(sprintf('"untilPartNumber" should not be a positive number, %d given.', $untilPartNumber));
 
         $condition = abs($untilPartNumber ?? $this->divide($content, $chunkSize));
