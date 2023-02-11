@@ -37,12 +37,12 @@ class Chunk
      * @param string|Content $content
      * @param $chunkSize
      * @param callable $callable
-     * @return false|Content
+     * @return false|string|Content
      * @throws Exception
      */
-    public function map(string|Content $content, $chunkSize, callable $callable): false|Content
+    public function map(string|Content $content, $chunkSize, callable $callable): false|string|Content
     {
-        $this->loop($content, $chunkSize, $callable($this->builder, (string)$content));
+        $this->loop($content, $chunkSize, $callable);
 
         return $content;
     }
@@ -154,6 +154,7 @@ class Chunk
 
     /**
      * Divide the content by given each chunk size (in bytes).
+     * Return the number of parts in total.
      *
      * @param string|Content $content
      * @param int $chunkSize
@@ -166,6 +167,7 @@ class Chunk
 
     /**
      * Divide the content to the number of parts.
+     * Return the size of each part.
      *
      * @param string|Content $content
      * @param int $number

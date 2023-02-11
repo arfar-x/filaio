@@ -129,35 +129,11 @@ abstract class Stream
      * Write data to content.
      *
      * @param mixed $data
-     * @param int $position
-     * @param string $mode
      * @return string|int
-     * @throws Exception
      */
-    public function write(mixed $data, int $position = 0, string $mode = 'override'): string|int
+    public function write(mixed $data): string|int
     {
-        /**
-         * TODO Modes:
-         *  plus: add given data with the beginning point of $position and before the next byte
-         *   e.g. position = 10 => $data is added to 11 and previous 11 byte is size($data)+1
-         *  override: override the content of given position until given data ends (like INSERT key mode)
-         *  before : opposite of plus
-         */
-
-        switch ($mode) {
-            case 'plus':
-                $this->moveCursor($position, 'set');
-                // TODO Add padding with the size of $data to next byte/character
-                return fwrite($this->stream, $data);
-            case 'override':
-                $this->setEmpty();
-                return fwrite($this->stream, $data);
-            case 'before':
-                // TODO We can use reverse of $data size (negative $data size)
-                return fwrite($this->stream, $data);
-            default:
-                throw new Exception("Unknown write mode {$mode}.");
-        }
+        return fwrite($this->stream, $data);
     }
 
     /**

@@ -136,6 +136,74 @@ class Builder
     }
 
     /**
+     * Put the data into the stream.
+     *
+     * @param string|Content $content
+     * @param int $position
+     * @param string $mode
+     * @return false|int
+     * @throws Exception
+     */
+    public function put(string|Content $content, int $position, string $mode = 'override'): bool|int
+    {
+        return match ($mode) {
+            'before' => $this->putBefore($content, $position),
+            'override' => $this->override($content, $position),
+            'after' => $this->putAfter($content, $position),
+            default => throw new Exception(sprintf("Unknown put content mode %s in %s.", $mode, __CLASS__))
+        };
+    }
+
+    /**
+     * @param string|Content $content
+     * @param int $position
+     * @return bool|string|Content
+     */
+    public function putBefore(string|Content $content, int $position): bool|string|Content
+    {
+        /**
+         * TODO Implement this method
+         *  opposite of after
+         *  We can use reverse of $data size (negative $data size)
+         *
+         */
+
+        return $content;
+    }
+
+    /**
+     * @param string|Content $content
+     * @param int $position
+     * @return bool|string|Content
+     */
+    public function override(string|Content $content, int $position): bool|string|Content
+    {
+        /**
+         * TODO Implement this method
+         *  override the content of given position until given data ends (like INSERT key mode)
+         */
+
+        return $content;
+    }
+
+    /**
+     * @param string|Content $content
+     * @param int $position
+     * @return bool|string|Content
+     */
+    public function putAfter(string|Content $content, int $position): bool|string|Content
+    {
+        /**
+         * TODO Implement this method
+         *  add given data with the beginning point of $position and before the next byte
+         *   e.g. position = 10 => $data is added to 11 and previous 11 byte is size($data)+1
+         *  Add padding with the size of (string)$content to next byte/character
+         */
+
+        return $content;
+    }
+
+    /**
      * Run callback on a specific content despite default content without touching it.
      *
      * @param string|Content $content
