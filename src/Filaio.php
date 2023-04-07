@@ -102,6 +102,6 @@ class Filaio
      */
     public function __call(string $name, array $arguments): mixed
     {
-        return $this->builder->{$name}($arguments);
+        return $this->builder->{$name}(...$arguments);
     }
 }
