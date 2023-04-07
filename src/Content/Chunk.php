@@ -4,6 +4,7 @@ namespace Filaio\Content;
 
 use Exception;
 use Filaio\Builder;
+use Generator;
 
 class Chunk
 {
@@ -60,9 +61,16 @@ class Chunk
     public function loop(string|Content &$content, int $chunkSize, callable $callable = null, int $untilPartNumber = null): static
     {
         if ($untilPartNumber >= 0)
-            return $this->lazyLoop($content, $chunkSize, $callable, $untilPartNumber);
+            $partContentGenerator = $this->lazyLoop($content, $chunkSize, $untilPartNumber);
         else
-            return $this->reverseLazyLoop($content, $chunkSize, $callable, $untilPartNumber);
+            $partContentGenerator = $this->reverseLazyLoop($content, $chunkSize, $untilPartNumber);
+
+        while ($partContentGenerator->valid()) {
+            $callable($this->builder, $partContentGenerator->current());
+            $partContentGenerator->next();
+        }
+
+        return $this;
     }
 
     /**
@@ -70,28 +78,26 @@ class Chunk
      *
      * @param string|Content $content
      * @param int $chunkSize
-     * @param callable|null $callable
      * @param int|null $untilPartNumber
-     * @return Chunk
+     * @return Generator
      * @throws Exception
      */
-    protected function lazyLoop(string|Content &$content, int $chunkSize, callable $callable = null, int $untilPartNumber = null): static
+    protected function lazyLoop(string|Content &$content, int $chunkSize, int $untilPartNumber = null): Generator
     {
-        if (!is_null($untilPartNumber) && $untilPartNumber > 0)
+        if (!is_null($untilPartNumber) && $untilPartNumber < 0)
             throw new Exception(sprintf('"untilPartNumber" should not be a negative number, %d given.', $untilPartNumber));
 
-        $condition = $untilPartNumber ?? $this->divide($content, $chunkSize);
+        $partNumber = $untilPartNumber ?? $this->divide($content, $chunkSize);
+        $partSize = $chunkSize;
         $from = 0;
-        $to = $chunkSize;
+        $to = $partSize;
+        $lastByte = $this->builder->size();
 
-        for ($part = 0 ; $part < $condition ; ++$part) {
-            $from += $chunkSize;
-            $to += $chunkSize;
-            $partContent = $this->builder->readBytes($from, $to);
-            $callable($this->builder, $partContent);
+        while (($from < $lastByte) && ($partNumber >= $to / $partSize)) {
+            yield $this->builder->readBytes($from, $to);
+            $from += $partSize;
+            $to += $partSize;
         }
-
-        return $this;
     }
 
     /**
@@ -99,28 +105,41 @@ class Chunk
      *
      * @param string|Content $content
      * @param int $chunkSize
-     * @param callable|null $callable
      * @param int|null $untilPartNumber
-     * @return $this
+     * @return Generator
      * @throws Exception
      */
-    protected function reverseLazyLoop(string|Content &$content, int $chunkSize, callable $callable = null, int $untilPartNumber = null): static
+    protected function reverseLazyLoop(string|Content &$content, int $chunkSize, int $untilPartNumber = null): Generator
     {
         if (!is_null($untilPartNumber) && $untilPartNumber >= 0)
             throw new Exception(sprintf('"untilPartNumber" should not be a positive number, %d given.', $untilPartNumber));
 
-        $condition = abs($untilPartNumber ?? $this->divide($content, $chunkSize));
+        $partNumber = abs($untilPartNumber ?? $this->divide($content, $chunkSize));
+        $partSize = $chunkSize;
         $to = $this->builder->size();
         $from = $to - $chunkSize;
 
-        for ($part = $condition ; $part >= 0 ; --$part) {
+        // WIP
+
+        dump([
+            "partNumber" => $partNumber,
+            "partSize" => $partSize,
+            "chunkSize" => $chunkSize,
+            "from" => $from,
+            "to" => $to,
+        ]);
+
+//        while ($part >= 0) {
+//            yield $this->builder->readBytes($from, $to);
+//            $from -= $chunkSize;
+//            $to -= $chunkSize;
+//        }
+
+        for ($part = $partNumber ; $part >= 0 ; --$part) {
+            yield $this->builder->readBytes($from, $to);
             $from -= $chunkSize;
             $to -= $chunkSize;
-            $partContent = $this->builder->readBytes($from, $to);
-            $callable($this->builder, $partContent);
         }
-
-        return $this;
     }
 
     /**
